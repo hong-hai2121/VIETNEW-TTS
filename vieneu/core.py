@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from neucodec import NeuCodec, DistillNeuCodec
 from vieneu_utils.phonemize_text import phonemize_with_dict
-from vieneu_utils.core_utils import split_text_into_chunks, join_audio_chunks
+from vieneu_utils.core_utils import split_text_into_chunks, join_audio_chunks, split_text_into_chunks_with_breaks, join_audio_chunks_with_breaks
 from collections import defaultdict
 import re
 import gc
@@ -505,8 +505,8 @@ class VieNeuTTS:
         if ref_codes is None or ref_text is None:
              raise ValueError("Must provide either 'voice' dict or both 'ref_codes' and 'ref_text'.")
 
-        # Split text into chunks for better processing of long text
-        chunks = split_text_into_chunks(text, max_chars=max_chars)
+        # Split text into chunks and track break types (period vs comma)
+        chunks, break_types = split_text_into_chunks_with_breaks(text, max_chars=max_chars)
         
         if not chunks:
             return np.array([], dtype=np.float32)
@@ -524,8 +524,8 @@ class VieNeuTTS:
             wav = self._decode(output_str)
             all_wavs.append(wav)
 
-        # Join all chunks with optional padding/crossfade
-        final_wav = join_audio_chunks(all_wavs, self.sample_rate, silence_p, crossfade_p)
+        # Join all chunks with break-aware silence (comma=0.02s, period=0.08s)
+        final_wav = join_audio_chunks_with_breaks(all_wavs, self.sample_rate, break_types, silence_period=silence_p, silence_comma=0.02, crossfade_p=crossfade_p)
 
         # Apply watermark if available
         if self.watermarker:
@@ -1184,8 +1184,8 @@ class FastVieNeuTTS:
         self.gen_config.temperature = temperature
         self.gen_config.top_k = top_k
 
-        # Split text into chunks
-        chunks = split_text_into_chunks(text, max_chars=max_chars)
+        # Split text into chunks and track break types
+        chunks, break_types = split_text_into_chunks_with_breaks(text, max_chars=max_chars)
         
         if not chunks:
             return np.array([], dtype=np.float32)
@@ -1203,7 +1203,7 @@ class FastVieNeuTTS:
         else:
             # Multiple chunks: use batching for parallel generation
             all_wavs = self.infer_batch(chunks, ref_codes, ref_text, voice=voice, temperature=temperature, top_k=top_k)
-            wav = join_audio_chunks(all_wavs, self.sample_rate, silence_p, crossfade_p)
+            wav = join_audio_chunks_with_breaks(all_wavs, self.sample_rate, break_types, silence_period=silence_p, silence_comma=0.02, crossfade_p=crossfade_p)
 
         # Apply watermark if available
         if self.watermarker:
@@ -1521,7 +1521,7 @@ class RemoteVieNeuTTS(VieNeuTTS):
         if ref_codes is None or ref_text is None:
              raise ValueError("Must provide either 'voice' dict or both 'ref_codes' and 'ref_text'.")
 
-        chunks = split_text_into_chunks(text, max_chars=max_chars)
+        chunks, break_types = split_text_into_chunks_with_breaks(text, max_chars=max_chars)
         
         if not chunks:
             return np.array([], dtype=np.float32)
@@ -1562,8 +1562,8 @@ class RemoteVieNeuTTS(VieNeuTTS):
                 print(f"Error during remote inference: {e}")
                 continue
 
-        # Join all chunks with optional padding/crossfade
-        final_wav = join_audio_chunks(all_wavs, self.sample_rate, silence_p, crossfade_p)
+        # Join all chunks with break-aware silence (comma=0.02s, period=silence_p)
+        final_wav = join_audio_chunks_with_breaks(all_wavs, self.sample_rate, break_types, silence_period=silence_p, silence_comma=0.02, crossfade_p=crossfade_p)
 
         if self.watermarker:
             final_wav = self.watermarker.apply_watermark(final_wav, sample_rate=self.sample_rate)
