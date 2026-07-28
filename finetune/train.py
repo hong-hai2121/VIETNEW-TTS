@@ -1,4 +1,3 @@
-
 import os
 import sys
 import json
@@ -13,8 +12,10 @@ from transformers import (
 )
 from peft import get_peft_model
 
-# Thêm thư mục gốc vào path để import utils
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Thêm thư mục gốc và src vào path để import các module nội bộ
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(project_root, "src"))
+sys.path.insert(0, project_root)
 
 from vieneu_utils.phonemize_text import phonemize_with_dict
 from finetune.configs.lora_config import lora_config, training_config, get_training_args
@@ -27,7 +28,7 @@ def preprocess_sample(sample, tokenizer, max_len=2048):
     vq_codes = sample["codes"]
     
     codes_str = "".join([f"<|speech_{i}|>" for i in vq_codes])
-    chat = f"""user: Convert the text to speech:<|TEXT_PROMPT_START|>{phones}<|TEXT_PROMPT_END|>\nassistant:<|SPEECH_GENERATION_START|>{codes_str}<|SPEECH_GENERATION_END|>"""
+    chat = f"""<|TEXT_PROMPT_START|>{phones}<|TEXT_PROMPT_END|><|SPEECH_GENERATION_START|>{codes_str}<|SPEECH_GENERATION_END|>"""
     
     ids = tokenizer.encode(chat)
     

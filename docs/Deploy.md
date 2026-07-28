@@ -32,7 +32,7 @@ Run the following command to start the Web UI. You can also open another termina
 
 ```bash
 # GPU only
-docker compose --profile gpu up
+docker compose -f docker/docker-compose.yml --profile gpu up
 ```
 
 Access: **http://localhost:7860**
@@ -45,7 +45,7 @@ If you want to run scripts manually in the running container:
 docker compose exec gpu bash
 ```
 
-In the shell, you can run: `uv run main.py`, `uv run examples/infer_long_text.py`, ...
+In the shell, you can run: `uv run examples/main.py`, `uv run examples/infer_long_text.py`, ...
 
 The current directory code is mounted to `/workspace`, so when you edit code outside, it updates immediately in the container.
 
@@ -53,13 +53,13 @@ The current directory code is mounted to `/workspace`, so when you edit code out
 
 ## 🚢 Production Deployment
 
-The Production environment uses `docker-compose.prod.yml`. Source code will be **copied into the image** (no volume mount), ensuring stability and portability. By default, these services will **automatically run the Web UI**.
+The Production environment uses `docker/docker-compose.prod.yml`. Source code will be **copied into the image** (no volume mount), ensuring stability and portability. By default, these services will **automatically run the Web UI**.
 
 **Standard workflow:**
 
-1. **Build Image**: Use `docker-compose.build.yml`.
+1. **Build Image**: Use `docker/docker-compose.build.yml`.
 2. **Push to Registry**: Push the image to Docker Hub / Private Registry.
-3. **Deploy**: On the server, use `docker-compose.prod.yml` to pull and run.
+3. **Deploy**: On the server, use `docker/docker-compose.prod.yml` to pull and run.
 
 ---
 
@@ -78,27 +78,27 @@ Run the build command:
 
 ```bash
 # Build both (if needed) or specify service
-docker compose -f docker-compose.build.yml build gpu
+docker compose -f docker/docker-compose.build.yml build gpu
 ```
 
 ### 2. Push Image
 
 ```bash
-docker compose -f docker-compose.build.yml push gpu
+docker compose -f docker/docker-compose.build.yml push gpu
 ```
 
 ### 3. Run on Production
 
-On the production server, you only need the `docker-compose.prod.yml` file and the `.env` file.
+On the production server, you only need the `docker/docker-compose.prod.yml` file and the `.env` file.
 
 **Startup:**
 
 ```bash
 # Pull the latest image
-docker compose -f docker-compose.prod.yml --profile gpu pull
+docker compose -f docker/docker-compose.prod.yml --profile gpu pull
 
 # Start the service
-docker compose -f docker-compose.prod.yml --profile gpu up -d
+docker compose -f docker/docker-compose.prod.yml --profile gpu up -d
 ```
 
 ---
@@ -146,8 +146,8 @@ We use Docker Compose Profiles to manage variants:
 
 | Profile | Environment | File                      | Description                          |
 | ------- | ----------- | ------------------------- | ------------------------------------ |
-| `gpu`   | **Dev**     | `docker-compose.yml`      | Dev mode (Mount code + Web UI + GPU) |
-| `gpu`   | **Prod**    | `docker-compose.prod.yml` | Run mode (Baked code + Web UI + GPU) |
+| `gpu`   | **Dev**     | `docker/docker-compose.yml`      | Dev mode (Mount code + Web UI + GPU) |
+| `gpu`   | **Prod**    | `docker/docker-compose.prod.yml` | Run mode (Baked code + Web UI + GPU) |
 
 ### Environment Variables
 

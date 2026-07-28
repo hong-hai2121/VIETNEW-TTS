@@ -31,7 +31,7 @@ Chạy lệnh sau sẽ bật Web UI. Bạn cũng có thể mở terminal khác �
 
 ```bash
 # Chỉ hỗ trợ GPU
-docker compose --profile gpu up
+docker compose -f docker/docker-compose.yml --profile gpu up
 ```
 
 Truy cập: **http://localhost:7860**
@@ -44,7 +44,7 @@ Nếu muốn chạy scripts thủ công trong container đang chạy:
 docker compose exec gpu bash
 ```
 
-Trong shell, bạn có thể chạy: `uv run main.py`, `uv run examples/infer_long_text.py`, ...
+Trong shell, bạn có thể chạy: `uv run examples/main.py`, `uv run examples/infer_long_text.py`, ...
 
 Code thư mục hiện tại được mount vào `/workspace`, nên bạn sửa code ở ngoài là trong container cập nhật ngay.
 
@@ -52,13 +52,13 @@ Code thư mục hiện tại được mount vào `/workspace`, nên bạn sửa 
 
 ## 🚢 Production Deployment
 
-Môi trường Production sử dụng `docker-compose.prod.yml`. Code source sẽ được **copy vào trong image** (không mount volume), đảm bảo tính ổn định và portable. Mặc định các service này sẽ **tự động chạy Web UI**.
+Môi trường Production sử dụng `docker/docker-compose.prod.yml`. Code source sẽ được **copy vào trong image** (không mount volume), đảm bảo tính ổn định và portable. Mặc định các service này sẽ **tự động chạy Web UI**.
 
 **Quy trình chuẩn:**
 
-1.  **Build Image**: Sử dụng `docker-compose.build.yml`.
+1.  **Build Image**: Sử dụng `docker/docker-compose.build.yml`.
 2.  **Push Registry**: Đẩy image lên Docker Hub / Private Registry.
-3.  **Deploy**: Trên server, dùng `docker-compose.prod.yml` để pull và chạy.
+3.  **Deploy**: Trên server, dùng `docker/docker-compose.prod.yml` để pull và chạy.
 
 ---
 
@@ -77,27 +77,27 @@ Chạy lệnh build:
 
 ```bash
 # Build cả 2 (nếu cần) hoặc chỉ định service
-docker compose -f docker-compose.build.yml build gpu
+docker compose -f docker/docker-compose.build.yml build gpu
 ```
 
 ### 2. Push Image
 
 ```bash
-docker compose -f docker-compose.build.yml push gpu
+docker compose -f docker/docker-compose.build.yml push gpu
 ```
 
 ### 3. Run trên Production
 
-Trên server production, bạn chỉ cần file `docker-compose.prod.yml` và file `.env`.
+Trên server production, bạn chỉ cần file `docker/docker-compose.prod.yml` và file `.env`.
 
 **Startup:**
 
 ```bash
 # Pull image mới nhất
-docker compose -f docker-compose.prod.yml --profile gpu pull
+docker compose -f docker/docker-compose.prod.yml --profile gpu pull
 
 # Khởi chạy
-docker compose -f docker-compose.prod.yml --profile gpu up -d
+docker compose -f docker/docker-compose.prod.yml --profile gpu up -d
 ```
 
 ---
@@ -110,8 +110,8 @@ Chúng tôi sử dụng Docker Compose Profiles để quản lý các variants:
 
 | Profile | Môi trường | File                      | Mô tả                                |
 | ------- | ---------- | ------------------------- | ------------------------------------ |
-| `gpu`   | **Dev**    | `docker-compose.yml`      | Dev mode (Mount code + Web UI + GPU) |
-| `gpu`   | **Prod**   | `docker-compose.prod.yml` | Run mode (Baked code + Web UI + GPU) |
+| `gpu`   | **Dev**    | `docker/docker-compose.yml`      | Dev mode (Mount code + Web UI + GPU) |
+| `gpu`   | **Prod**   | `docker/docker-compose.prod.yml` | Run mode (Baked code + Web UI + GPU) |
 
 ### Environment Variables
 

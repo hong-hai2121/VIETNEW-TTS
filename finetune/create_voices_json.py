@@ -11,14 +11,11 @@ Usage:
 
 import argparse
 import json
+import os
 import torch
+import librosa
 from pathlib import Path
-import sys
-
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from vieneu import Vieneu
+from neucodec import DistillNeuCodec
 
 def create_voices_json(audio_path, text, voice_name, output_path="voices.json", description="", append=False, set_default=True):
     """
@@ -55,13 +52,20 @@ def create_voices_json(audio_path, text, voice_name, output_path="voices.json", 
             "presets": {}
         }
     
-    # Initialize TTS to get codec
-    tts = Vieneu()
-    
+    # Load DistillNeuCodec (same codec VieNeu-TTS uses at inference)
+    print("   🔊 Loading DistillNeuCodec...")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    codec = DistillNeuCodec.from_pretrained("neuphonic/distill-neucodec").to(device)
+    codec.eval()
+
     # Encode the reference audio
-    print("   Encoding audio...")
-    ref_codes = tts.encode_reference(audio_path)
-    
+    print("   🎙️ Encoding audio...")
+    wav, _ = librosa.load(audio_path, sr=16000, mono=True)
+    wav_tensor = torch.from_numpy(wav).float().unsqueeze(0).unsqueeze(0).to(device)
+
+    with torch.no_grad():
+        ref_codes = codec.encode_code(audio_or_path=wav_tensor).squeeze(0).squeeze(0)
+
     # Convert to list for JSON serialization
     codes_list = ref_codes.cpu().numpy().flatten().tolist()
     

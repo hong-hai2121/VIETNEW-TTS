@@ -67,7 +67,7 @@ Sau khi huấn luyện xong, bạn sẽ có các file adapter (vd: `adapter_mode
     - Nhập Repo ID vào tab **LoRA Adapter** trong ứng dụng Gradio.
 2.  **Sử dụng trong Code**:
     ```python
-    tts.load_lora_adapter("path/to/your/lora_folder")
+    vieneu.load_lora_adapter("path/to/your/lora_folder")
     ```
 
 ---
@@ -78,7 +78,7 @@ Khi upload model fine-tuned lên HuggingFace, bạn **nên kèm theo file `voice
 
 ### Tại sao cần `voices.json`?
 
-- ✅ Người dùng chỉ cần: `tts = Vieneu(backbone_repo="your-username/your-model")`
+- ✅ Người dùng chỉ cần: `vieneu = Vieneu(backbone_repo="your-username/your-model")`
 - ✅ Không cần upload/chỉ định file audio mẫu nữa
 - ✅ Model "portable" - mang theo giọng của nó
 - ✅ Trải nghiệm tốt hơn cho người dùng cuối
@@ -160,12 +160,12 @@ Giờ đây, người dùng chỉ cần:
 from vieneu import Vieneu
 
 # Khởi tạo với model của bạn
-tts = Vieneu(backbone_repo="your-username/your-model")
+vieneu = Vieneu(backbone_repo="your-username/your-model")
 
 # Tổng hợp ngay - KHÔNG CẦN truyền voice!
-audio = tts.infer("Xin chào, tôi là giọng nói custom!")
+audio = vieneu.infer("Xin chào, tôi là giọng nói custom!")
 
-tts.save(audio, "output.wav")
+vieneu.save(audio, "output.wav")
 ```
 
 SDK sẽ tự động:
