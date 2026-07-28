@@ -18,7 +18,8 @@ try:
 except Exception:
     librosa = None
 
-from vieneu import FastVieNeuTTS, VieNeuTTS
+from vieneu.fast import FastVieNeuTTS
+from vieneu.standard import VieNeuTTS
 
 
 DEFAULT_BASE_MODEL = "pnnbao-ump/VieNeu-TTS-0.3B"

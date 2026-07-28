@@ -99,7 +99,7 @@ def main() -> None:
     temp, max_chars, top_k = apply_guardrails(text, args.temperature, args.max_chars, args.top_k)
     log(f"device={device} | chars={len(text)} | temp={temp} max_chars={max_chars} top_k={top_k}")
 
-    from vieneu import VieNeuTTS
+    from vieneu.standard import VieNeuTTS
 
     log(f"Nạp model (standard): {model_path}")
     tts = VieNeuTTS(
